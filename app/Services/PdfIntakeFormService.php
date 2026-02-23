@@ -11,20 +11,20 @@ class PdfIntakeFormService
 {
     protected string $formKey = 'dad_intake_form';
 
-    protected string $pdfTemplatePath = 'pdfs/intake-forms/Enrollment_Documents_Fillable_GD_North_Central_Contract_Region.pdf';
+    protected string $pdfTemplatePath = 'intake-form/Enrollment_Form_Fillable_2026-01-27.pdf';
 
     public function generate($participant): string
     {
-        $fieldMap = config("pdf_forms.{$this->formKey}");
+        // $fieldMap = config("pdf_forms.{$this->formKey}");
 
-        $data = [];
-        foreach ($fieldMap as $pdfField => $participantField) {
-            $value = data_get($participant, $participantField);
-            // if ($value instanceof \Carbon\Carbon) {
-            //     $value = $value->format('m/d/Y');
-            // }
-            $data[$pdfField] = $value ?? '';
-        }
+        // $data = [];
+        // foreach ($fieldMap as $pdfField => $participantField) {
+        //     $value = data_get($participant, $participantField);
+        //     // if ($value instanceof \Carbon\Carbon) {
+        //     //     $value = $value->format('m/d/Y');
+        //     // }
+        //     $data[$pdfField] = $value ?? '';
+        // }
 
         // Build folder structure for each participant
         $storagePath = "participant-forms/{$participant->id}/";
@@ -35,6 +35,7 @@ class PdfIntakeFormService
 
         // Ensure directory exists
         Storage::makeDirectory($storagePath);
+        $data = $participant->toPdfArray();
 
         // Load and fill the PDF
         $pdf = new Pdf(storage_path("app/{$this->pdfTemplatePath}"));

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\Integrations\NeonApiService;
-use App\Services\NeonDataTransformer;
+use App\Services\NeonDTOTransformer;
 use App\Services\PdfIntakeFormService;
 use App\Models\NeonHash;
 use Illuminate\Bus\Queueable;
@@ -35,7 +35,7 @@ class GenerateParticipantPdfJob implements ShouldQueue
      */
     public function handle(
         NeonApiService $neonApi,
-        NeonDataTransformer $transformer,
+        NeonDTOTransformer $transformer,
         PdfIntakeFormService $pdfService
     ) {
         try {

@@ -2,6 +2,7 @@
 
 namespace App\Services\Integrations;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 
 use Exception;
@@ -60,28 +61,81 @@ class NeonApiService
         return $responseJson;
     }
 
-    public function getTodaysParticipants(): array
-    {
-        $url = "{$this->baseUrl}/data/persons";
+    public function getTodaysParticipantIds(): array {
+        $todaysDate = Carbon::today()->format('Y-m-d');
+        // $todaysDate = '2026-02-01';
+        return $this->getParticipantIdsByDate($todaysDate);
+    }
 
-        $fields = [
-            // Contact info
-            'fullName',
-            'enteredDate',
-            'updatedDate',
+    private function getParticipantIdsByDate(string $filterDate): array {
+        $tables = ['persons', 'persons_applications_children', 'persons_applications', 'persons_assessment_worksheet', 'persons_introductory_survey', 'persons_service_plan'];
+        $fields = ['persons_id', 'entered_date', 'updated_date'];
+        $baseUrl = "{$this->baseUrl}/data";
+
+        $params = [
+            'key' => $this->apiKey,
         ];
 
-        $response = Http::get($url, [
-            'fields' => json_encode($fields),
-            'key' => $this->apiKey,
-        ]);
+        $params['fields'] = json_encode($fields);
+        
+        $params['where'] = json_encode([
+            'whereType' => 'OR',
+            'clauses' => [
+                [
+                    'fieldName' => 'enteredDate',
+                    'operator' => '>=',
+                    'operand' => $filterDate,
+                ],
+                [
+                    'fieldName' => 'updatedDate',
+                    'operator' => '>=',
+                    'operand' => $filterDate,
+                ]
+            ],
+        ]);     
 
-        $response->throw(); // will raise exception if not 200
+        $participantIds = [];
 
-        $data = $response->json() ?? [];
+        foreach ($tables as $table) {
+            $url = "{$baseUrl}/$table";
+            $response = Http::get($url, $params);
+            $data = $response->json() ?? [];
+            $records = $data['records'] ?? [];
 
-        return $data['records'] ?? [];
+            if (!empty($records)) {
+                $personsIds = array_column($records, 'persons_id');
+                $newIds = array_column($personsIds, 'value');
+                $participantIds = array_unique(array_merge($participantIds, $newIds));
+            }
+
+        }
+
+        return $participantIds;
     }
+
+
+    // public function getTodaysParticipants(): array
+    // {
+    //     $url = "{$this->baseUrl}/data/persons";
+
+    //     $fields = [
+    //         // Contact info
+    //         'fullName',
+    //         'enteredDate',
+    //         'updatedDate',
+    //     ];
+
+    //     $response = Http::get($url, [
+    //         'fields' => json_encode($fields),
+    //         'key' => $this->apiKey,
+    //     ]);
+
+    //     $response->throw(); // will raise exception if not 200
+
+    //     $data = $response->json() ?? [];
+
+    //     return $data['records'] ?? [];
+    // }
 
     public function getParticipant(int $id): array
     {
@@ -151,6 +205,8 @@ class NeonApiService
     public function fetchPersonContactInfo(int $personId, bool $useWhereClause): array
     {
         return $this->fetch("persons/{$personId}", [
+            "firstName",
+            "lastName",
             "regions_id",
             "enteredDate",
             "address1",

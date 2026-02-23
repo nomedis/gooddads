@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Services\Integrations\NeonApiService;
 use App\Jobs\GenerateParticipantPdfJob; 
 use App\Models\NeonHash;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PollNeonParticipants extends Command
 {
@@ -39,11 +41,15 @@ class PollNeonParticipants extends Command
      */
     public function handle()
     {
-        $participants = $this->neonApi->getTodaysParticipants();
+        $today = Carbon::today()->format('m-d-Y');
+        Log::info("Collecting participant records that have been added or updated today - {$today}....");
+        
+        $participantIds = $this->neonApi->getTodaysParticipantIds();
 
-        foreach ($participants as $person) {
-            $participantId = (int) $person['persons_id']['value'];
-
+        $count = count($participantIds);
+        Log::info("Found {$count} new or updated participant records.");
+        
+        foreach ($participantIds as $participantId) {
             // Build the full participant record
             $fullRecord = $this->neonApi->buildFullParticipantRecord($participantId);
 
