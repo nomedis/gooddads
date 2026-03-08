@@ -8,23 +8,17 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\DTOs\ParticipantUpdateData;
 
 class IntakeFormMailable extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $participant;
-
-    public $pdfPath;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($participant, $pdfPath)
-    {
-        $this->participant = $participant;
-        $this->pdfPath = $pdfPath;
-    }
+    public function __construct(private readonly ParticipantUpdateData $participant, private readonly string $pdfPath){}
 
     /**
      * Get the message envelope.
@@ -32,7 +26,7 @@ class IntakeFormMailable extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Intake Form for '.($this->participant->full_name ?? 'Participant')
+            subject: 'Intake Form for '.($this->participant->fullName ?? 'Participant')
         );
     }
 

@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 use Exception;
 
@@ -62,9 +63,13 @@ class NeonApiService
     }
 
     public function getTodaysParticipantIds(): array {
-        $todaysDate = Carbon::today()->format('Y-m-d');
-        // $todaysDate = '2026-02-01';
-        return $this->getParticipantIdsByDate($todaysDate);
+        $todaysDate = Carbon::today('America/Chicago')->format('Y-m-d');
+        // $todaysDate = '2026-02-24';
+        Log::info("Collecting participant records that have been added or updated today - {$todaysDate}....");
+        $toReturn = $this->getParticipantIdsByDate($todaysDate);
+        $count = count($toReturn);
+        Log::info("Found {$count} new or updated participant records.");
+        return $toReturn;
     }
 
     private function getParticipantIdsByDate(string $filterDate): array {
@@ -308,7 +313,10 @@ class NeonApiService
         return $this->fetch('persons_service_plan', [
             "persons_id",
             "programName",
-            "clientNumber",
+            /**
+             * This field is broken at Neon, it changes at every request breaking our hashing
+             */
+            //"clientNumber",
             "reviewDates",
             "serviceAreas",
             "serviceIdentifiedByTheParticipants",

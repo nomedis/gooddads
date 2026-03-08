@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use mikehaertl\pdftk\Pdf;
+use App\DTOs\ParticipantUpdateData;
 
 class PdfIntakeFormService
 {
@@ -13,7 +14,7 @@ class PdfIntakeFormService
 
     protected string $pdfTemplatePath = 'intake-form/Enrollment_Form_Fillable_2026-01-27.pdf';
 
-    public function generate($participant): string
+    public function generate(ParticipantUpdateData $participant): string
     {
         // $fieldMap = config("pdf_forms.{$this->formKey}");
 
@@ -29,7 +30,7 @@ class PdfIntakeFormService
         // Build folder structure for each participant
         $storagePath = "participant-forms/{$participant->id}/";
         $timestamp = Carbon::now()->format('Y-m-d_H-i-s');
-        $filename = Str::of($participant->last_name)->slug('_')->ucfirst().'_'.Str::of($participant->first_name)->slug('_')->ucfirst().'_Enrollment_'.$timestamp.'.pdf';
+        $filename = Str::of($participant->lastName)->slug('_')->ucfirst().'_'.Str::of($participant->firstName)->slug('_')->ucfirst().'_Enrollment_'.$timestamp.'.pdf';
 
         $outputPath = storage_path("app/{$storagePath}{$filename}");
 
