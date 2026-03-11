@@ -76,7 +76,7 @@ class NeonApiService
 
     public function getTodaysParticipantIds(): array {
         $todaysDate = Carbon::today('America/Chicago')->format('Y-m-d');
-        // $todaysDate = '2026-02-24';
+        // $todaysDate = '2024-02-24'; // for testing
         Log::info("Collecting participant records that have been added or updated today - {$todaysDate}....");
         $toReturn = $this->getParticipantIdsByDate($todaysDate);
         $count = count($toReturn);
