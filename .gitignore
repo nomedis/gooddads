@@ -33,3 +33,6 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+#Bruno collection config with api key
+**/meta.bru

@@ -4,8 +4,11 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\Integrations\NeonApiService;
+use App\Services\NeonDTOTransformer;
 use App\Jobs\GenerateParticipantPdfJob; 
 use App\Models\NeonHash;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PollNeonParticipants extends Command
 {
@@ -39,21 +42,29 @@ class PollNeonParticipants extends Command
      */
     public function handle()
     {
-        $participants = $this->neonApi->getTodaysParticipants();
+        
+        $participantIds = $this->neonApi->getTodaysParticipantIds();
+   
+        foreach ($participantIds as $participantId) {
+            // Get the full participant record
+            $fullRecord = $this->neonApi->buildFullParticipantRecord($participantId);   
 
-        foreach ($participants as $person) {
-            $participantId = (int) $person['persons_id']['value'];
-
-            // Build the full participant record
-            $fullRecord = $this->neonApi->buildFullParticipantRecord($participantId);
 
             // Create a hash of the full record
             $hash = hash('sha256', json_encode($fullRecord));
 
             // Check if hash already exists
             if (!NeonHash::where('id', $hash)->exists()) {
+                Log::info("Participant ". $participantId . " has updated data. Queuing pdf regeneration.");
+                // Store the hash for the participant data for future comparison
                 NeonHash::create(['id' => $hash]);
-                dispatch(new GenerateParticipantPdfJob($participantId));
+
+                // Transform the participant data into serializable DTOs
+                $serializableDTOs = NeonDTOTransformer::transformParticipantData($fullRecord);
+                // Queue the pdf generation job
+                dispatch(new GenerateParticipantPdfJob($serializableDTOs));
+            } else {
+                Log::info("Participant ". $participantId . " has no updated data. Skipping pdf regeneration.");
             }
         }
 
