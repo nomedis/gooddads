@@ -23,6 +23,7 @@
 
 - All project contributors should run these commands every week to ensure your local project is using the current project dependencies.
   - `composer install`
+  - `composer setup`
   - `npm install`
   - `npm run build`
 
