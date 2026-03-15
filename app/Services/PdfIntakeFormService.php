@@ -39,7 +39,7 @@ class PdfIntakeFormService
         $data = $participant->toPdfArray();
 
         // Load and fill the PDF
-        $pdf = new Pdf(storage_path("app/{$this->pdfTemplatePath}"));
+        $pdf = new Pdf(storage_path("{$this->pdfTemplatePath}"));
         $pdf->fillForm($data)
             ->needAppearances()
             ->flatten()

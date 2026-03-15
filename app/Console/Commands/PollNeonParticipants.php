@@ -44,6 +44,8 @@ class PollNeonParticipants extends Command
     {
         
         $participantIds = $this->neonApi->getTodaysParticipantIds();
+
+        Log::info('Found '.count($participantIds).' participant records to check for updates.');
    
         foreach ($participantIds as $participantId) {
             // Get the full participant record

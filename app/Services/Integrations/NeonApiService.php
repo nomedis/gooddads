@@ -10,9 +10,8 @@ use Exception;
 
 class NeonApiService
 {
-    protected string $baseUrl;
-
-    protected string $apiKey;
+    protected ?string $baseUrl;
+    protected ?string $apiKey;
 
     public function __construct()
     {
@@ -20,8 +19,21 @@ class NeonApiService
         $this->apiKey = config('services.neon.api_key');
     }
 
+    private function ensureConfigured(): void
+    {
+        if (!$this->baseUrl) {
+            throw new \RuntimeException('NEON_BASE_URL is not configured.');
+        }
+
+        if (!$this->apiKey) {
+            throw new \RuntimeException('NEON_API_KEY is not configured.');
+        }
+    }
+
     private function fetch(string $endpoint, array $fields = [], ?int $personId = null, bool $useWhereClause = true): array
     {
+        $this->ensureConfigured();
+
         $url = "{$this->baseUrl}/data/{$endpoint}";
 
         $params = [
@@ -64,7 +76,7 @@ class NeonApiService
 
     public function getTodaysParticipantIds(): array {
         $todaysDate = Carbon::today('America/Chicago')->format('Y-m-d');
-        // $todaysDate = '2026-02-24';
+        // $todaysDate = '2024-02-24'; // for testing
         Log::info("Collecting participant records that have been added or updated today - {$todaysDate}....");
         $toReturn = $this->getParticipantIdsByDate($todaysDate);
         $count = count($toReturn);
